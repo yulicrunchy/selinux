@@ -1202,7 +1202,7 @@ out:
 	return rc;
 }
 
-int hidden sepol_compute_av(sepol_security_id_t ssid,
+int sepol_compute_av(sepol_security_id_t ssid,
 			    sepol_security_id_t tsid,
 			    sepol_security_class_t tclass,
 			    sepol_access_vector_t requested,
@@ -1217,7 +1217,7 @@ int hidden sepol_compute_av(sepol_security_id_t ssid,
  * Return a class ID associated with the class string specified by
  * class_name.
  */
-int hidden sepol_string_to_security_class(const char *class_name,
+int sepol_string_to_security_class(const char *class_name,
 			sepol_security_class_t *tclass)
 {
 	class_datum_t *tclass_datum;
@@ -1304,7 +1304,7 @@ int hidden sepol_sid_to_context(sepol_security_id_t sid,
  * Return a SID associated with the security context that
  * has the string representation specified by `scontext'.
  */
-int hidden sepol_context_to_sid(const sepol_security_context_t scontext,
+int sepol_context_to_sid(const sepol_security_context_t scontext,
 				size_t scontext_len, sepol_security_id_t * sid)
 {
 
