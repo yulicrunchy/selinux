@@ -61,4 +61,6 @@ LIBSEPOL_1.1 {
 	sepol_string_to_security_class;
 	sepol_compute_av;
 	sepol_context_to_sid;
+	sepol_get_policydb;
+	sepol_policydb_role_exists;
 } LIBSEPOL_1.0;

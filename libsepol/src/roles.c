@@ -18,6 +18,15 @@ int sepol_role_exists(sepol_handle_t * handle __attribute__ ((unused)),
 	return STATUS_SUCCESS;
 }
 
+/* Check if a role exists */
+int sepol_policydb_role_exists(policydb_t *policydb, const char *role, int *response)
+{
+
+	*response = (hashtab_search(policydb->p_roles.table, role) != NULL);
+
+	return STATUS_SUCCESS;
+}
+
 /* Fill an array with all valid roles */
 int sepol_role_list(sepol_handle_t * handle,
 		    sepol_policydb_t * p, char ***roles, unsigned int *nroles)
