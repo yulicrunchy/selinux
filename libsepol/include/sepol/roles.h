@@ -8,6 +8,8 @@ extern "C" {
 extern int sepol_role_exists(const sepol_policydb_t * policydb,
 			     const char *role, int *response);
 
+extern int sepol_policydb_role_exists(policydb_t *policydb, const char *role, int *response);
+
 extern int sepol_role_list(const sepol_policydb_t * policydb,
 			   char ***roles, unsigned int *nroles);
 
