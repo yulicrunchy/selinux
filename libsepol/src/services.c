@@ -133,6 +133,11 @@ int hidden sepol_set_policydb(policydb_t * p)
 	return 0;
 }
 
+int sepol_policydb_load_isids(policydb_t *p)
+{
+	return policydb_load_isids(p, sidtab);
+}
+
 int sepol_set_policydb_from_file(FILE * fp)
 {
 	struct policy_file pf;
