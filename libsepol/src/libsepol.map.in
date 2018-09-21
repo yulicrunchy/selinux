@@ -58,6 +58,7 @@ LIBSEPOL_1.1 {
 	sepol_kernel_policydb_to_conf;
 	sepol_polcap_getnum;
 	sepol_polcap_getname;
+	sepol_sid_to_context;
 	sepol_string_to_security_class;
 	sepol_compute_av;
 	sepol_context_to_sid;

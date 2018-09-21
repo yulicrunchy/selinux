@@ -1286,7 +1286,7 @@ out:
  * to point to this string and set `*scontext_len' to
  * the length of the string.
  */
-int hidden sepol_sid_to_context(sepol_security_id_t sid,
+int sepol_sid_to_context(sepol_security_id_t sid,
 				sepol_security_context_t * scontext,
 				size_t * scontext_len)
 {
