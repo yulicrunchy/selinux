@@ -168,6 +168,13 @@ extern int sepol_get_user_sids(sepol_security_id_t callsid,
 			       sepol_security_id_t ** sids, uint32_t * nel);
 
 /*
+ * Initialize the sidtab using the policydb
+ *
+ * Returns 0 on Success and -1 on Failure.
+ */
+extern int sepol_policydb_load_isids(policydb_t *p);
+
+/*
  * Return the SIDs to use for an unlabeled file system
  * that is being mounted from the device with the
  * the kdevname `name'.  The `fs_sid' SID is returned for 
