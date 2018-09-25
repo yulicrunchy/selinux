@@ -1365,10 +1365,28 @@ static inline int compute_sid_handle_invalid_context(context_struct_t *
 	}
 }
 
+static void filename_compute_type(policydb_t *p, context_struct_t *newcontext,
+                  sepol_security_id_t stype, sepol_security_id_t ttype, sepol_security_class_t tclass,
+                  char *objname)
+{
+	filename_trans_t ft;
+	filename_trans_datum_t *otype;
+
+	ft.stype = stype;
+	ft.ttype = ttype;
+	ft.tclass = tclass;
+	ft.name = objname;
+
+	otype = hashtab_search(p->filename_trans, (hashtab_key_t)&ft);
+	if (otype) {
+		newcontext->type = otype->otype;
+	}
+}
+
 static int sepol_compute_sid(sepol_security_id_t ssid,
 			     sepol_security_id_t tsid,
 			     sepol_security_class_t tclass,
-			     uint32_t specified, sepol_security_id_t * out_sid)
+			     uint32_t specified, char *objname, sepol_security_id_t * out_sid)
 {
 	context_struct_t *scontext = 0, *tcontext = 0, newcontext;
 	struct role_trans *roletr = 0;
@@ -1443,6 +1461,12 @@ static int sepol_compute_sid(sepol_security_id_t ssid,
 		newcontext.type = avdatum->data;
 	}
 
+	/* if we have an objname this is a file trans check so check those rules */
+	if (objname) {
+		filename_compute_type(policydb, &newcontext, scontext->type,
+				tcontext->type, tclass, objname);
+	}
+
 	/* Check for class-specific changes. */
 	switch (tclass) {
 	case SECCLASS_PROCESS:
@@ -1492,9 +1516,10 @@ static int sepol_compute_sid(sepol_security_id_t ssid,
 int sepol_transition_sid(sepol_security_id_t ssid,
 				sepol_security_id_t tsid,
 				sepol_security_class_t tclass,
+				char *objname,
 				sepol_security_id_t * out_sid)
 {
-	return sepol_compute_sid(ssid, tsid, tclass, AVTAB_TRANSITION, out_sid);
+	return sepol_compute_sid(ssid, tsid, tclass, AVTAB_TRANSITION, objname, out_sid);
 }
 
 /*
@@ -1505,9 +1530,10 @@ int sepol_transition_sid(sepol_security_id_t ssid,
 int hidden sepol_member_sid(sepol_security_id_t ssid,
 			    sepol_security_id_t tsid,
 			    sepol_security_class_t tclass,
+			    char *objname,
 			    sepol_security_id_t * out_sid)
 {
-	return sepol_compute_sid(ssid, tsid, tclass, AVTAB_MEMBER, out_sid);
+	return sepol_compute_sid(ssid, tsid, tclass, AVTAB_MEMBER, objname, out_sid);
 }
 
 /*
@@ -1517,9 +1543,10 @@ int hidden sepol_member_sid(sepol_security_id_t ssid,
 int hidden sepol_change_sid(sepol_security_id_t ssid,
 			    sepol_security_id_t tsid,
 			    sepol_security_class_t tclass,
+			    char *objname,
 			    sepol_security_id_t * out_sid)
 {
-	return sepol_compute_sid(ssid, tsid, tclass, AVTAB_CHANGE, out_sid);
+	return sepol_compute_sid(ssid, tsid, tclass, AVTAB_CHANGE, objname, out_sid);
 }
 
 /*
