@@ -1489,7 +1489,7 @@ static int sepol_compute_sid(sepol_security_id_t ssid,
  * Compute a SID to use for labeling a new object in the 
  * class `tclass' based on a SID pair.  
  */
-int hidden sepol_transition_sid(sepol_security_id_t ssid,
+int sepol_transition_sid(sepol_security_id_t ssid,
 				sepol_security_id_t tsid,
 				sepol_security_class_t tclass,
 				sepol_security_id_t * out_sid)
