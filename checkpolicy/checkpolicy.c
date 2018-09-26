@@ -867,14 +867,14 @@ int main(int argc, char **argv)
 
 			if (ch == '3')
 				ret =
-				    sepol_transition_sid(ssid, tsid, tclass,
+				    sepol_transition_sid(ssid, tsid, tclass, NULL,
 							 &ssid);
 			else if (ch == '4')
 				ret =
-				    sepol_member_sid(ssid, tsid, tclass, &ssid);
+				    sepol_member_sid(ssid, tsid, tclass, NULL, &ssid);
 			else
 				ret =
-				    sepol_change_sid(ssid, tsid, tclass, &ssid);
+				    sepol_change_sid(ssid, tsid, tclass, NULL, &ssid);
 			switch (ret) {
 			case 0:
 				printf("\nsid %d\n", ssid);
