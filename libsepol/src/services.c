@@ -127,7 +127,7 @@ int hidden sepol_set_sidtab(sidtab_t * s)
 	return 0;
 }
 
-int hidden sepol_set_policydb(policydb_t * p)
+int sepol_set_policydb(policydb_t * p)
 {
 	policydb = p;
 	return 0;

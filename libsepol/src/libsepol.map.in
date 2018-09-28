@@ -66,4 +66,5 @@ LIBSEPOL_1.1 {
 	sepol_policydb_role_exists;
 	sepol_policydb_load_isids;
 	sepol_transition_sid;
+	sepol_set_policydb;
 } LIBSEPOL_1.0;
