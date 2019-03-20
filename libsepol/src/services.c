@@ -1241,7 +1241,7 @@ int sepol_string_to_security_class(const char *class_name,
  * Return access vector bit associated with the class ID and permission
  * string.
  */
-int hidden sepol_string_to_av_perm(sepol_security_class_t tclass,
+int sepol_string_to_av_perm(sepol_security_class_t tclass,
 					const char *perm_name,
 					sepol_access_vector_t *av)
 {
