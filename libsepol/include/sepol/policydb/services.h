@@ -258,6 +258,34 @@ extern int sepol_genfs_sid(const char *fstype,	/* IN */
 			   sepol_security_class_t sclass,	/* IN */
 			   sepol_security_id_t * sid);	/* OUT  */
 
+/* class mapping */
+struct sepol_security_class_mapping {
+	const char *name;
+	const char *perms[sizeof(sepol_access_vector_t) * 8 + 1];
+};
+
+/**
+ * sepol_set_mapping - Enable dynamic mapping between integer offsets and security class names
+ * @map: array of sepol_security_class_mapping structures
+ *
+ * The core sepol_compute_av() API uses integers to represent security
+ * classes; previous to the introduction of this function, it was
+ * common for userspace object managers to be compiled using generated
+ * offsets for a particular policy.  However, that strongly ties the build of the userspace components to a particular policy.
+ *
+ * By using this function to map between integer offsets and security
+ * class names, it's possible to replace a system policies that have
+ * at least the same set of security class names as used by the
+ * userspace object managers.
+ *
+ * To correctly use this function, you should override the generated
+ * security class defines from the system policy in a local header,
+ * starting at 1, and have one sepol_security_class_mapping structure entry
+ * per define.
+ */
+extern int sepol_set_mapping(struct sepol_security_class_mapping *map);
+
+
 #ifdef __cplusplus
 }
 #endif
