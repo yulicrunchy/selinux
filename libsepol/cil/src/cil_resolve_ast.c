@@ -135,8 +135,11 @@ static int __cil_resolve_perms(symtab_t *class_symtab, symtab_t *common_symtab, 
 				if (class_flavor == CIL_MAP_CLASS) {
 					cil_log(CIL_ERR, "Failed to resolve permission %s for map class\n", (char*)curr->data);
 					goto exit;
+				} else if (class_flavor == CIL_CLASS) {
+					cil_log(CIL_ERR, "Failed to resolve permission %s\n", (char*)curr->data);
+					goto exit;
 				}
-				cil_log(CIL_WARN, "Failed to resolve permission %s\n", (char*)curr->data);
+
 				/* Use an empty list to represent unknown perm */
 				cil_list_init(&empty_list, perm_strs->flavor);
 				cil_list_append(*perm_datums, CIL_LIST, empty_list);
