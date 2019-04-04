@@ -615,6 +615,8 @@ int mls_compute_sid(policydb_t * policydb,
 	struct class_datum *cladatum;
 	int default_range = 0;
 
+	// TODO unmap tclass
+
 	if (!policydb->mls)
 		return 0;
 

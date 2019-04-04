@@ -1057,6 +1057,7 @@ int hidden sepol_validate_transition(sepol_security_id_t oldsid,
 	class_datum_t *tclass_datum;
 	constraint_node_t *constraint;
 
+	// TODO tclass unmapping
 	if (!tclass || tclass > policydb->p_classes.nprim) {
 		ERR(NULL, "unrecognized class %d", tclass);
 		return -EINVAL;
@@ -1110,6 +1111,7 @@ int hidden sepol_validate_transition_reason_buffer(sepol_security_id_t oldsid,
 	class_datum_t *tclass_datum;
 	constraint_node_t *constraint;
 
+	// TODO tclass unmapping
 	if (!tclass || tclass > policydb->p_classes.nprim) {
 		ERR(NULL, "unrecognized class %d", tclass);
 		return -EINVAL;
@@ -1381,6 +1383,7 @@ static inline int compute_sid_handle_invalid_context(context_struct_t *
 		context_to_string(NULL, policydb, scontext, &s, &slen);
 		context_to_string(NULL, policydb, tcontext, &t, &tlen);
 		context_to_string(NULL, policydb, newcontext, &n, &nlen);
+	// TODO tclass unmapping
 		ERR(NULL, "invalid context %s for "
 		    "scontext=%s tcontext=%s tclass=%s",
 		    n, s, t, policydb->p_class_val_to_name[tclass - 1]);
