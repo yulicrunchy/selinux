@@ -121,6 +121,24 @@ static char *pop(void)
 }
 /* End Stack services */
 
+/*
+ * Class and permission mappings
+ */
+
+struct selinux_mapping {
+	sepol_security_class_t value; /* real, kernel value */
+	unsigned num_perms;
+	sepol_access_vector_t perms[sizeof(sepol_access_vector_t) * 8];
+};
+
+static struct selinux_mapping *current_mapping = NULL;
+static sepol_security_class_t current_mapping_size = 0;
+static sepol_security_class_t unmap_class(sepol_security_class_t tclass);
+static sepol_security_class_t map_class(sepol_security_class_t pol_value);
+static sepol_access_vector_t unmap_perm(sepol_security_class_t tclass, sepol_access_vector_t tperm);
+static void map_decision(sepol_security_class_t tclass, struct sepol_av_decision *avd, int allow_unknown);
+/* End Class Mapping */
+
 int hidden sepol_set_sidtab(sidtab_t * s)
 {
 	sidtab = s;
@@ -912,8 +930,12 @@ static int context_struct_compute_av(context_struct_t * scontext,
 	ebitmap_t *sattr, *tattr;
 	ebitmap_node_t *snode, *tnode;
 	unsigned int i, j;
+	sepol_security_class_t orig_tclass = tclass;
 
-	if (!tclass || tclass > policydb->p_classes.nprim) {
+	requested = unmap_perm(tclass, requested);
+	tclass = unmap_class(tclass);
+
+       if (!tclass || tclass > policydb->p_classes.nprim) {
 		ERR(NULL, "unrecognized class %d", tclass);
 		return -EINVAL;
 	}
@@ -1019,6 +1041,8 @@ static int context_struct_compute_av(context_struct_t * scontext,
 
 	type_attribute_bounds_av(scontext, tcontext, tclass, requested, avd,
 				 reason);
+
+	map_decision(orig_tclass, avd, policydb->handle_unknown);
 	return 0;
 }
 
@@ -1233,7 +1257,8 @@ int sepol_string_to_security_class(const char *class_name,
 		ERR(NULL, "unrecognized class %s", class_name);
 		return STATUS_ERR;
 	}
-	*tclass = tclass_datum->s.value;
+	*tclass = map_class(tclass_datum->s.value);
+
 	return STATUS_SUCCESS;
 }
 
@@ -1248,6 +1273,7 @@ int sepol_string_to_av_perm(sepol_security_class_t tclass,
 	class_datum_t *tclass_datum;
 	perm_datum_t *perm_datum;
 
+	tclass = unmap_class(tclass);
 	if (!tclass || tclass > policydb->p_classes.nprim) {
 		ERR(NULL, "unrecognized class %d", tclass);
 		return -EINVAL;
@@ -1394,6 +1420,8 @@ static int sepol_compute_sid(sepol_security_id_t ssid,
 	avtab_datum_t *avdatum;
 	avtab_ptr_t node;
 	int rc = 0;
+
+	tclass = unmap_class(tclass);
 
 	scontext = sepol_sidtab_search(sidtab, ssid);
 	if (!scontext) {
@@ -2373,5 +2401,178 @@ int hidden sepol_fs_use(const char *fstype,
       out:
 	return rc;
 }
+
+int
+sepol_set_mapping(struct sepol_security_class_mapping *map)
+{
+	size_t size = sizeof(struct selinux_mapping);
+	sepol_security_class_t i, j;
+	unsigned k;
+	int rc;
+
+	free(current_mapping);
+	current_mapping = NULL;
+	current_mapping_size = 0;
+
+	/* Find number of classes in the input mapping */
+	if (!map) {
+		errno = EINVAL;
+		goto err;
+	}
+	i = 0;
+	while (map[i].name)
+		i++;
+
+	/* Allocate space for the class records, plus one for class zero */
+	current_mapping = (struct selinux_mapping *)calloc(++i, size);
+	if (!current_mapping)
+		goto err;
+
+	/* Store the raw class and permission values */
+	j = 0;
+	while (map[j].name) {
+		struct sepol_security_class_mapping *p_in = map + (j++);
+		struct selinux_mapping *p_out = current_mapping + j;
+
+		rc = sepol_string_to_security_class(p_in->name, &(p_out->value));
+		if (rc != STATUS_SUCCESS)
+		{
+			ERR(NULL, "failed to map: %s", p_in->name);
+			goto err2;
+		}
+
+		k = 0;
+		while (p_in->perms[k]) {
+			/* An empty permission string skips ahead */
+			if (!*p_in->perms[k]) {
+				k++;
+				continue;
+			}
+			rc = sepol_string_to_av_perm(p_out->value,
+							    p_in->perms[k], &(p_out->perms[k]));
+			if (rc != STATUS_SUCCESS)
+			{
+				ERR(NULL, "failed to get av perm for: %d", p_out->value);
+				goto err2;
+			}
+			k++;
+		}
+		p_out->num_perms = k;
+	}
+
+	/* Set the mapping size here so the above lookups are "raw" */
+	current_mapping_size = i;
+	return 0;
+err2:
+	free(current_mapping);
+	current_mapping = NULL;
+	current_mapping_size = 0;
+err:
+	return -1;
+}
+
+static sepol_security_class_t
+unmap_class(sepol_security_class_t tclass)
+{
+	if (tclass < current_mapping_size)
+		return current_mapping[tclass].value;
+
+	/* If here no mapping set or the class requested is not valid. */
+	if (current_mapping_size != 0) {
+		errno = EINVAL;
+		return 0;
+	}
+	else
+		return tclass;
+}
+
+/*
+ ** Get kernel value for class from its policy value
+ **/
+static sepol_security_class_t map_class(sepol_security_class_t pol_value)
+{
+    sepol_security_class_t i;
+
+    for (i = 0; i < current_mapping_size; i++) {
+        if (current_mapping[i].value == pol_value)
+            return i;
+    }
+
+    /* If here no mapping set or the class requested is not valid. */
+    if (current_mapping_size != 0) {
+        errno = EINVAL;
+        return 0;
+    } else {
+        return pol_value;
+    }
+}
+
+static sepol_access_vector_t
+unmap_perm(sepol_security_class_t tclass, sepol_access_vector_t tperm)
+{
+	if (tclass < current_mapping_size) {
+		unsigned i;
+		sepol_access_vector_t kperm = 0;
+
+		for (i=0; i<current_mapping[tclass].num_perms; i++) {
+			if (tperm & (1<<i)) {
+				kperm |= current_mapping[tclass].perms[i];
+				tperm &= ~(1<<i);
+			}
+		}
+		return kperm;
+	}
+
+	if (current_mapping_size != 0) {
+		errno = EINVAL;
+		return 0;
+	}
+	else
+		return tperm;
+}
+
+static void map_decision(sepol_security_class_t tclass, struct sepol_av_decision *avd,
+             int allow_unknown)
+{
+    if (tclass >= current_mapping_size) {
+		return;
+    }
+
+	unsigned i, n = current_mapping[tclass].num_perms;
+	sepol_access_vector_t result;
+
+	for (i = 0, result = 0; i < n; i++) {
+		if (avd->allowed & current_mapping[tclass].perms[i])
+			result |= 1<<i;
+		if (allow_unknown && !current_mapping[tclass].perms[i])
+			result |= 1<<i;
+	}
+	avd->allowed = result;
+
+	for (i = 0, result = 0; i < n; i++)
+		if (avd->auditallow & current_mapping[tclass].perms[i])
+			result |= 1<<i;
+	avd->auditallow = result;
+
+	for (i = 0, result = 0; i < n; i++) {
+		if (avd->auditdeny & current_mapping[tclass].perms[i])
+			result |= 1<<i;
+		if (!allow_unknown && !current_mapping[tclass].perms[i])
+			result |= 1<<i;
+	}
+
+	/*
+	 ** In case the kernel has a bug and requests a permission
+	 ** between num_perms and the maximum permission number, we
+	 ** should audit that denial
+     **/
+	for (; i < (sizeof(sepol_access_vector_t)*8); i++)
+		result |= 1<<i;
+	avd->auditdeny = result;
+}
+
+/*
+ * Get mapped values from real, kernel values
+ */
 
 /* FLASK */
