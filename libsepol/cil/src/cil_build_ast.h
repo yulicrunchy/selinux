@@ -54,6 +54,8 @@ int cil_gen_classorder(struct cil_db *db, struct cil_tree_node *parse_current, s
 void cil_destroy_classorder(struct cil_classorder *classorder);
 int cil_gen_perm(struct cil_db *db, struct cil_tree_node *parse_current, struct cil_tree_node *ast_node, enum cil_flavor flavor, unsigned int *num_perms);
 void cil_destroy_perm(struct cil_perm *perm);
+int cil_gen_permorder(struct cil_db *db, struct cil_tree_node *parse_current, struct cil_tree_node *ast_node);
+void cil_destroy_permorder(struct cil_permorder *permorder);
 int cil_gen_perm_nodes(struct cil_db *db, struct cil_tree_node *current_perm, struct cil_tree_node *ast_node, enum cil_flavor flavor, unsigned int *num_perms);
 int cil_fill_perms(struct cil_tree_node *start_perm, struct cil_list **perm_strs);
 int cil_fill_classperms(struct cil_tree_node *parse_current, struct cil_classperms **cp);

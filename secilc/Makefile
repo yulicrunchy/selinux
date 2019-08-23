@@ -1,6 +1,7 @@
 PREFIX ?= /usr
 BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
+CC = gcc
 
 SECILC = secilc
 SECILC_SRCS := secilc.c
@@ -30,7 +31,7 @@ test: $(SECILC)
 $(SECIL2CONF): $(SECIL2CONF_OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-man: $(SECILC_MANPAGE) $(SECIL2CONF_MANPAGE)
+#man: $(SECILC_MANPAGE) $(SECIL2CONF_MANPAGE)
 
 $(SECILC_MANPAGE): $(SECILC_MANPAGE).xml
 	$(XMLTO) man $(SECILC_MANPAGE).xml

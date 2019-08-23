@@ -230,6 +230,7 @@ static void cil_init_keys(void)
 	CIL_KEY_ROOT = cil_strpool_add("<root>");
 	CIL_KEY_NODE = cil_strpool_add("<node>");
 	CIL_KEY_PERM = cil_strpool_add("perm");
+	CIL_KEY_PERM_ORDER = cil_strpool_add("permorder");
 	CIL_KEY_ALLOWX = cil_strpool_add("allowx");
 	CIL_KEY_AUDITALLOWX = cil_strpool_add("auditallowx");
 	CIL_KEY_DONTAUDITX = cil_strpool_add("dontauditx");
@@ -394,7 +395,7 @@ int cil_compile_nopdb(struct cil_db *db)
 		goto exit;
 	}
 
-	cil_log(CIL_INFO, "Building AST from Parse Tree\n");
+	cil_log(CIL_INFO, "Building AST from Parse Tree yk\n");
 	rc = cil_build_ast(db, db->parse->root, db->ast->root);
 	if (rc != SEPOL_OK) {
 		cil_log(CIL_INFO, "Failed to build ast\n");
@@ -2420,6 +2421,13 @@ void cil_perm_init(struct cil_perm **perm)
 	cil_symtab_datum_init(&(*perm)->datum);
 	(*perm)->value = 0;
 	(*perm)->classperms = NULL;
+}
+
+void cil_permorder_init(struct cil_permorder **permorder)
+{
+	*permorder = cil_malloc(sizeof(**permorder));
+
+	(*permorder)->perm_list_str = NULL;
 }
 
 void cil_classpermission_init(struct cil_classpermission **cp)

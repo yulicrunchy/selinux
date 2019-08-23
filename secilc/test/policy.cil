@@ -72,6 +72,7 @@
 	(classcommon char file)
 
 	(class dir ())
+	(permorder (open read audit_access))
 	(class a ())
 	(class b ())
 	(class c ())

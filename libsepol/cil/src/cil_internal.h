@@ -224,6 +224,7 @@ char *CIL_KEY_DEFAULTTYPE;
 char *CIL_KEY_ROOT;
 char *CIL_KEY_NODE;
 char *CIL_KEY_PERM;
+char *CIL_KEY_PERM_ORDER;
 char *CIL_KEY_ALLOWX;
 char *CIL_KEY_AUDITALLOWX;
 char *CIL_KEY_DONTAUDITX;
@@ -363,6 +364,10 @@ struct cil_perm {
 	struct cil_symtab_datum datum;
 	unsigned int value;
 	struct cil_list *classperms; /* Only used for map perms */
+};
+ 
+struct cil_permorder {
+	struct cil_list *perm_list_str;
 };
 
 struct cil_class {
@@ -1044,6 +1049,7 @@ void cil_constrain_init(struct cil_constrain **constrain);
 void cil_validatetrans_init(struct cil_validatetrans **validtrans);
 void cil_ipaddr_init(struct cil_ipaddr **ipaddr);
 void cil_perm_init(struct cil_perm **perm);
+void cil_permorder_init(struct cil_permorder **permorder);
 void cil_classpermission_init(struct cil_classpermission **cp);
 void cil_classpermissionset_init(struct cil_classpermissionset **cps);
 void cil_classperms_set_init(struct cil_classperms_set **cp_set);

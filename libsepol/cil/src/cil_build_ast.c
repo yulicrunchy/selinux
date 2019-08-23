@@ -549,6 +549,74 @@ void cil_destroy_perm(struct cil_perm *perm)
 	free(perm);
 }
 
+int cil_gen_permorder(struct cil_db *db, struct cil_tree_node *parse_current, struct cil_tree_node *ast_node)
+{
+	enum cil_syntax syntax[] = {
+		CIL_SYN_STRING,
+		CIL_SYN_LIST,
+		CIL_SYN_END
+	};
+	int syntax_len = sizeof(syntax)/sizeof(*syntax);
+	struct cil_permorder *permorder = NULL;
+	struct cil_list_item *curr = NULL;
+	struct cil_list_item *head = NULL;
+	int rc = SEPOL_ERR;
+
+	if (db == NULL || parse_current == NULL || ast_node == NULL) {
+		goto exit;
+	}
+
+	rc = __cil_verify_syntax(parse_current, syntax, syntax_len);
+	if (rc !=  SEPOL_OK) {
+		goto exit;
+	}
+
+	cil_permorder_init(&permorder);
+
+	rc = cil_fill_list(parse_current->next->cl_head, CIL_PERM_ORDER, &permorder->perm_list_str);
+	if (rc != SEPOL_OK) {
+		goto exit;
+	}
+
+	head = permorder->perm_list_str->head;
+	cil_list_for_each(curr, permorder->perm_list_str) {
+		if (curr->data == CIL_KEY_UNORDERED) {
+			if (curr == head && curr->next == NULL) {
+				cil_log(CIL_ERR, "Permorder 'unordered' keyword must be followed by one or more permission.\n");
+				rc = SEPOL_ERR;
+				goto exit;
+			} else if (curr != head) {
+				cil_log(CIL_ERR, "Permorder can only use 'unordered' keyword as the first item in the list.\n");
+				rc = SEPOL_ERR;
+				goto exit;
+			}
+		}
+	}
+
+	ast_node->data = permorder;
+	ast_node->flavor = CIL_PERM_ORDER;
+
+	return SEPOL_OK;
+
+exit:
+	cil_tree_log(parse_current, CIL_ERR, "Bad permorder declaration");
+	cil_destroy_permorder(permorder);
+	return rc;
+}
+
+void cil_destroy_permorder(struct cil_permorder *permorder)
+{
+	if (permorder == NULL) {
+		return;
+	}
+
+	if (permorder->perm_list_str != NULL) {
+		cil_list_destroy(&permorder->perm_list_str, 1);
+	}
+
+	free(permorder);
+}
+
 int cil_gen_perm_nodes(struct cil_db *db, struct cil_tree_node *current_perm, struct cil_tree_node *ast_node, enum cil_flavor flavor, unsigned int *num_perms)
 {
 	int rc = SEPOL_ERR;
@@ -6104,6 +6172,7 @@ int __cil_build_ast_node_helper(struct cil_tree_node *parse_current, uint32_t *f
 	struct cil_tree_node *tunif = NULL;
 	struct cil_tree_node *in = NULL;
 	int rc = SEPOL_ERR;
+	printf("YK: test\n");
 
 	if (parse_current == NULL || finished == NULL || extra_args == NULL) {
 		goto exit;
@@ -6205,6 +6274,9 @@ int __cil_build_ast_node_helper(struct cil_tree_node *parse_current, uint32_t *f
 		// To avoid parsing list of perms again
 		*finished = CIL_TREE_SKIP_NEXT;
 	} else if (parse_current->data == CIL_KEY_CLASSORDER) {
+		rc = cil_gen_classorder(db, parse_current, ast_node);
+		*finished = CIL_TREE_SKIP_NEXT;
+	} else if (parse_current->data == CIL_KEY_PERM_ORDER) {
 		rc = cil_gen_classorder(db, parse_current, ast_node);
 		*finished = CIL_TREE_SKIP_NEXT;
 	} else if (parse_current->data == CIL_KEY_MAP_CLASS) {
@@ -6466,6 +6538,7 @@ int __cil_build_ast_node_helper(struct cil_tree_node *parse_current, uint32_t *f
 		rc = cil_gen_src_info(parse_current, ast_node);
 	} else {
 		cil_log(CIL_ERR, "Error: Unknown keyword %s\n", (char *)parse_current->data);
+		cil_log(CIL_ERR, "permorder: %s", CIL_KEY_PERM_ORDER);
 		rc = SEPOL_ERR;
 	}
 
